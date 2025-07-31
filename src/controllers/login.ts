@@ -3,8 +3,8 @@ import User from '../models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecreto';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'superRefreshSecretKey';
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
 export const login = async (req: Request, res: Response) => {
     const { username, password } = req.body;
@@ -19,6 +19,10 @@ export const login = async (req: Request, res: Response) => {
         const valid = await bcrypt.compare(password, user.password);
         if (!valid) {
             return res.status(401).json({ message: 'Wrong credentials' });
+        }
+
+        if (!JWT_REFRESH_SECRET || !JWT_SECRET) {
+            throw new Error('❌ JWT secrets are missing in .env file');
         }
 
         // ✅ Create Access Token (shorter lifespan, for auth headers)

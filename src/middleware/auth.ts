@@ -1,13 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ultraSecureDefaultSecret';
-
+const JWT_SECRET = process.env.JWT_SECRET;
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
 
     if (!token) return res.status(401).json({ message: 'No token provided' });
+
+    if (!JWT_SECRET) {
+        throw new Error('❌ JWT secrets are missing in .env file');
+    }
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
