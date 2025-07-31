@@ -22,6 +22,8 @@ app.use(cors({
     origin: (origin, callback) => {
         const whitelist = [
             'http://localhost:5173',
+            'https://my-portfolio-six-tan-41.vercel.app',
+            'https://my-portfolio-api-production-7c80.up.railway.app'
         ];
 
         if (!origin || whitelist.includes(origin)) {
