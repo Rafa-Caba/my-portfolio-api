@@ -19,20 +19,11 @@ const app: Application = express();
 
 // Middlewares
 app.use(cors({
-    origin: (origin, callback) => {
-        const whitelist = [
-            'http://localhost:5173',
-            'https://my-portfolio-six-tan-41.vercel.app',
-            'https://my-portfolio-api-production-7c80.up.railway.app'
-        ];
-
-        if (!origin || whitelist.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
+    origin: [
+        'http://localhost:5173',
+        'https://my-portfolio-six-tan-41.vercel.app'
+    ],
+    credentials: true
 }));
 
 app.use(express.json());
