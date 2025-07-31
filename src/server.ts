@@ -1,0 +1,65 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+import express, { Application } from 'express';
+import mongoose from 'mongoose';
+import cookieParser from 'cookie-parser';
+
+import cors from 'cors';
+
+import loginRoute from './routes/login';
+import registerRoute from './routes/register';
+import refreshRoute from './routes/refresh';
+import userRoutes from './routes/users';
+import settingsRoutes from './routes/settings';
+import projectsRoutes from './routes/projects';
+import dashboardRoutes from './routes/dashboard';
+
+const app: Application = express();
+
+// Middlewares
+app.use(cors({
+    origin: (origin, callback) => {
+        const whitelist = [
+            'http://localhost:5173',
+        ];
+
+        if (!origin || whitelist.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+}));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(cookieParser());
+
+app.use('/api/auth/login', loginRoute);
+app.use('/api/auth/register', registerRoute);
+app.use('/api/auth/refresh', refreshRoute);
+app.use('/api/users', userRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/projects', projectsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+
+const PORT = process.env.PORT || 4000;
+const MONGO_URI = process.env.MONGO_URI || '';
+
+if (!MONGO_URI) {
+    console.error('Falta MONGO_URI en el archivo .env');
+    process.exit(1);
+}
+
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('🟢 Connecte to MongoDB Atlas'))
+    .catch((err) => console.error('🔴 Error in MongoDB:', err));
+
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
+
+export default app;
