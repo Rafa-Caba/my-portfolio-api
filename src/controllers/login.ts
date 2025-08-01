@@ -6,45 +6,60 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
-export const login = async (req: Request, res: Response) => {
-    const { username, password } = req.body;
+import RefreshToken from '../models/RefreshToken';
+
+export const login = async (req: Request, res: Response): Promise<void> => {
+    const { usernameOrEmail, password } = req.body;
 
     try {
-        const user = await User.findOne({ username });
+        const user = await User.findOne({
+            $or: [
+                { correo: usernameOrEmail },
+                { username: usernameOrEmail }
+            ]
+        }).populate('personalTheme');
 
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            res.status(401).json({ mensaje: 'User not found' });
+            return;
         }
 
-        const valid = await bcrypt.compare(password, user.password);
-        if (!valid) {
-            return res.status(401).json({ message: 'Wrong credentials' });
+        const passwordValida = await bcrypt.compare(password, user.password);
+        if (!passwordValida) {
+            res.status(401).json({ mensaje: 'Incorrect password' });
+            return;
         }
 
         if (!JWT_REFRESH_SECRET || !JWT_SECRET) {
             throw new Error('❌ JWT secrets are missing in .env file');
         }
 
-        // ✅ Create Access Token (shorter lifespan, for auth headers)
-        const accessToken = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '15m' });
+        const accessToken = jwt.sign(
+            { id: user._id, username: user.username },
+            JWT_SECRET,
+            { expiresIn: '15m' }
+        );
 
-        // ✅ Create Refresh Token (longer, stored in cookie)
-        const refreshToken = jwt.sign({ id: user._id }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
+        const refreshToken = jwt.sign(
+            { id: user._id, username: user.username },
+            JWT_REFRESH_SECRET,
+            { expiresIn: '7d' }
+        );
 
-        const isProd = process.env.NODE_ENV === 'production';
+        await RefreshToken.create({ token: refreshToken, userId: user._id });
 
-        // ✅ Set refresh token as httpOnly cookie
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            secure: isProd,
-            sameSite: isProd ? 'none' : 'lax',
-            path: '/api/auth/refresh',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
+        await user.save();
+
+        console.log({
+            user,
+            accessToken,
+            refreshToken,
         });
 
-        // ✅ Send access token + user
         res.json({
-            accessToken,
+            mensaje: 'Login successful',
+            token: accessToken,
+            refreshToken,
             user: {
                 id: user._id,
                 name: user.name,
@@ -56,9 +71,7 @@ export const login = async (req: Request, res: Response) => {
                 personalTheme: user.personalTheme
             }
         });
-
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ message: 'Error upon login' });
+    } catch (error: any) {
+        res.status(500).json({ mensaje: error.message });
     }
 };

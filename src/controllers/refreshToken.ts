@@ -1,14 +1,28 @@
 import { Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
+import RefreshToken from '../models/RefreshToken';
 
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 const JWT_ACCESS_SECRET = process.env.JWT_SECRET;
 
-export const refreshToken = (req: Request, res: Response) => {
-    const token = req.cookies?.refreshToken;
+export const refreshToken = async (req: Request, res: Response): Promise<void> => {
+    const refreshToken = req.body.token;
 
-    if (!token) {
-        return res.status(401).json({ message: 'No refresh token provided' });
+    const decoded = jwt.decode(refreshToken) as JwtPayload | null;
+
+    if (!decoded?.id) {
+        res.status(403).json({ mensaje: 'Invalid token' });
+        return;
+    }
+
+    const storedToken = await RefreshToken.findOne({
+        token: refreshToken,
+        userId: decoded.id
+    });
+
+    if (!storedToken) {
+        res.status(403).json({ mensaje: 'Refresh token not found or revoked' });
+        return;
     }
 
     if (!JWT_REFRESH_SECRET || !JWT_ACCESS_SECRET) {
@@ -16,18 +30,16 @@ export const refreshToken = (req: Request, res: Response) => {
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_REFRESH_SECRET) as JwtPayload;
+        const user = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as JwtPayload;
 
-        // ✅ MATCH the login payload key
         const newAccessToken = jwt.sign(
-            { id: decoded.id }, // this must match login payload!
+            { id: user.id, username: user.username },
             JWT_ACCESS_SECRET,
             { expiresIn: '15m' }
         );
 
-        return res.json({ accessToken: newAccessToken });
+        res.json({ accessToken: newAccessToken });
     } catch (err) {
-        console.error('Refresh error:', err);
-        return res.status(403).json({ message: 'Invalid or expired refresh token' });
+        res.status(403).json({ mensaje: 'Token expired or invalid' });
     }
 };

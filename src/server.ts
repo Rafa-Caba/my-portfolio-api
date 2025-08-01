@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 
 import loginRoute from './routes/login';
+import logoutRoute from './routes/logout';
 import registerRoute from './routes/register';
 import refreshRoute from './routes/refresh';
 import userRoutes from './routes/users';
@@ -33,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use('/api/auth/login', loginRoute);
+app.use('/api/auth/logout', logoutRoute);
 app.use('/api/auth/register', registerRoute);
 app.use('/api/auth/refresh', refreshRoute);
 app.use('/api/users', userRoutes);
