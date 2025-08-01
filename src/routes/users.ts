@@ -3,7 +3,6 @@ import verifyToken from '../middleware/auth';
 import { changePassword, getProfile, getPublicUserProfile, getUserById, updateUserById } from '../controllers/users';
 import { uploadUserImage } from '../middleware/cloudinary';
 
-
 const router = Router();
 
 router.get('/profile', verifyToken, getProfile);

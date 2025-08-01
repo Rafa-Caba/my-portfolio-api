@@ -31,13 +31,15 @@ export const login = async (req: Request, res: Response) => {
         // ✅ Create Refresh Token (longer, stored in cookie)
         const refreshToken = jwt.sign({ id: user._id }, JWT_REFRESH_SECRET, { expiresIn: '7d' });
 
+        const isProd = process.env.NODE_ENV === 'production';
+
         // ✅ Set refresh token as httpOnly cookie
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'none', // <-- this allows cross-origin
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             path: '/api/auth/refresh',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         // ✅ Send access token + user
