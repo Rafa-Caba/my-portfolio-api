@@ -16,6 +16,8 @@ import settingsRoutes from './routes/settings';
 import projectsRoutes from './routes/projects';
 import dashboardRoutes from './routes/dashboard';
 import visitRoutes from './routes/visits';
+import logRoutes from './routes/logRoutes';
+import visitorsRoutes from './routes/visitors';
 
 const app: Application = express();
 
@@ -42,6 +44,8 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/projects', projectsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/visits', visitRoutes);
+app.use('/api/logs', logRoutes);
+app.use('/api/visitors', visitorsRoutes);
 
 const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI || '';

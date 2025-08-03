@@ -3,9 +3,14 @@ import Project, { IProject } from '../models/Project';
 import { deleteFromCloudinary } from '../utils/deleteFromCloudinary';
 
 export const getAllProjects = async (_req: Request, res: Response) => {
-    const projects = await Project.find().sort({ createdAt: -1 });
+    try {
+        const projects = await Project.find().sort({ createdAt: -1 });
 
-    res.json(projects);
+        res.json(projects);
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to fetch project', error: err });
+    }
+
 };
 
 export const getProjectById = async (req: Request, res: Response) => {

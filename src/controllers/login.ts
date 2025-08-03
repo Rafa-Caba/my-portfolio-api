@@ -50,12 +50,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
         await user.save();
 
-        console.log({
-            user,
-            accessToken,
-            refreshToken,
-        });
-
         res.json({
             mensaje: 'Login successful',
             token: accessToken,
