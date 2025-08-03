@@ -25,7 +25,7 @@ const app: Application = express();
 app.use(cors({
     origin: [
         'http://localhost:5173',
-        'https://my-portfolio-six-tan-41.vercel.app'
+        'https://my-portfolio-cabanillas.vercel.app'
     ],
     credentials: true
 }));
